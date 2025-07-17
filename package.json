@@ -32,7 +32,7 @@
   ],
   "codegenConfig": {
     "name": "RNSoundSpec",
-    "type": "all",
+    "type": "modules",
     "jsSrcsDir": "src",
     "outputDir": {
       "ios": "ios/generated",

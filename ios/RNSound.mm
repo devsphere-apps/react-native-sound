@@ -1,5 +1,9 @@
 #import "RNSound.h"
 
+#ifdef RCT_NEW_ARCH_ENABLED
+#import "RNSoundSpec.h"
+#endif
+
 #if __has_include("RCTUtils.h")
 #import "RCTUtils.h"
 #else
@@ -11,6 +15,13 @@
     NSMutableDictionary *_callbackPool;
     double _key;  // Add this line to declare _key
 }
+
+#ifdef RCT_NEW_ARCH_ENABLED
+- (std::shared_ptr<facebook::react::TurboModule>)getTurboModule:
+    (const facebook::react::ObjCTurboModule::InitParams &)params {
+    return std::make_shared<facebook::react::NativeSoundIOSSpecJSI>(params);
+}
+#endif
 
 RCT_EXPORT_MODULE()
 @synthesize _key = _key;
@@ -177,7 +188,18 @@ RCT_EXPORT_METHOD(enableInSilenceMode:(BOOL)enabled) {
 
 #pragma mark - Audio Control Methods
 
-RCT_EXPORT_METHOD(prepare:(NSString *)fileName key:(double)key options:(JS::NativeSoundIOS::SoundOptionTypes &)options callback:(RCTResponseSenderBlock)callback ) {
+#ifdef RCT_NEW_ARCH_ENABLED
+RCT_EXPORT_METHOD(prepare:(NSString *)fileName 
+                  key:(double)key 
+                  options:(JS::NativeSoundIOS::SpecSoundOptions &)options 
+                  callback:(RCTResponseSenderBlock)callback)
+#else
+RCT_EXPORT_METHOD(prepare:(NSString *)fileName 
+                  key:(double)key 
+                  options:(NSDictionary *)options 
+                  callback:(RCTResponseSenderBlock)callback)
+#endif
+{
     NSError *error;
     NSURL *fileNameUrl;
     AVAudioPlayer *player;
@@ -199,6 +221,33 @@ RCT_EXPORT_METHOD(prepare:(NSString *)fileName key:(double)key options:(JS::Nati
         @synchronized(self) {
             player.delegate = self;
             player.enableRate = YES;
+            
+#ifdef RCT_NEW_ARCH_ENABLED
+            if (options.enableRate) {
+                player.rate = options.rate;
+            }
+            if (options.enableVolume) {
+                player.volume = options.volume;
+            }
+            if (options.enablePan) {
+                player.pan = options.pan;
+            }
+            player.numberOfLoops = options.numberOfLoops;
+#else
+            if (options[@"enableRate"]) {
+                player.rate = [options[@"rate"] floatValue];
+            }
+            if (options[@"enableVolume"]) {
+                player.volume = [options[@"volume"] floatValue];
+            }
+            if (options[@"enablePan"]) {
+                player.pan = [options[@"pan"] floatValue];
+            }
+            if (options[@"numberOfLoops"]) {
+                player.numberOfLoops = [options[@"numberOfLoops"] intValue];
+            }
+#endif
+            
             [player prepareToPlay];
             NSNumber *myNumber = @(key);
             [[self playerPool] setObject:player forKey:myNumber];
