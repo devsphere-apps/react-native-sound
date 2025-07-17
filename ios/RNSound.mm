@@ -596,14 +596,14 @@ RCT_EXPORT_METHOD(preloadForGapless:(double)key callback:(RCTResponseSenderBlock
     AVPlayerItem *item = queuePlayer.currentItem;
     if (item) {
         if (item.status == AVPlayerItemStatusReadyToPlay) {
-            callback(@[@YES]);
+            callback(@[@YES, @""]);
         } else {
             // Add observer for when item becomes ready
             [[NSNotificationCenter defaultCenter] addObserverForName:AVPlayerItemDidPlayToEndTimeNotification
                                                               object:item
                                                                queue:[NSOperationQueue mainQueue]
                                                           usingBlock:^(NSNotification *note) {
-                callback(@[@YES]);
+                callback(@[@YES, @""]);
             }];
         }
     } else {

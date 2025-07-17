@@ -39,12 +39,12 @@ export interface Spec extends TurboModule {
     key: number, 
     callback: (info: {
       isGaplessSupported: boolean;
-      memoryUsage?: number;
+      memoryUsage: number;
     }) => void
   ) => void;
   preloadForGapless: (
     key: number, 
-    callback: (success: boolean, error?: string) => void
+    callback: (success: boolean, error: string) => void
   ) => void;
 }
 

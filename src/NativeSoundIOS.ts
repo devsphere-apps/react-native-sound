@@ -34,7 +34,7 @@ export interface Spec extends TurboModule {
   enableInSilenceMode: (enabled: boolean) => void;
   enable: (enabled: boolean) => void;
   setActive: (value: boolean) => void;
-  setCategory: (value: string, mixWithOthers?: boolean) => void;
+  setCategory: (value: string, mixWithOthers: boolean) => void;
   setSpeakerPhone: (key: number, isSpeaker: boolean) => void;
   setNumberOfLoops: (key: number, loops: number) => void;
   addListener: (eventName: string) => void;
@@ -43,17 +43,17 @@ export interface Spec extends TurboModule {
   // Enhanced Gapless Looping Methods
   setGaplessLooping: (key: number, enabled: boolean) => void;
   setGaplessLoopCount: (key: number, count: number) => void;
-  setGaplessTransitionType: (key: number, type: 'instant' | 'crossfade') => void;
+  setGaplessTransitionType: (key: number, type: string) => void;
   getGaplessInfo: (
     key: number, 
     callback: (info: {
       isGaplessSupported: boolean;
-      memoryUsage?: number;
+      memoryUsage: number;
     }) => void
   ) => void;
   preloadForGapless: (
     key: number, 
-    callback: (success: boolean, error?: string) => void
+    callback: (success: boolean, error: string) => void
   ) => void;
 }
 

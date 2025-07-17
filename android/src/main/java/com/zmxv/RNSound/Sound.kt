@@ -595,14 +595,14 @@ open class Sound internal constructor(context:ReactApplicationContext):AudioMana
     
     // Check if already ready
     if (exoPlayer.playbackState == Player.STATE_READY) {
-      callback.invoke(true)
+      callback.invoke(true, "")
     } else {
       // Add listener for when ready
       exoPlayer.addListener(object : Player.Listener {
         override fun onPlaybackStateChanged(playbackState: Int) {
           if (playbackState == Player.STATE_READY) {
             exoPlayer.removeListener(this)
-            callback.invoke(true)
+            callback.invoke(true, "")
           } else if (playbackState == Player.STATE_IDLE) {
             exoPlayer.removeListener(this)
             callback.invoke(false, "Failed to prepare")
