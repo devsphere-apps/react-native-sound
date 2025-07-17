@@ -84,6 +84,23 @@ open class SoundSpec internal constructor(context: ReactApplicationContext) :
     // Keep: Needed for RN built in Event Emitter Calls
   }
 
+  // Enhanced Gapless Looping Methods
+  override fun setGaplessLooping(key: Double, enabled: Boolean) {
+    module.setGaplessLooping(key, enabled)
+  }
+
+  override fun setGaplessLoopCount(key: Double, count: Double) {
+    module.setGaplessLoopCount(key, count)
+  }
+
+  override fun getGaplessInfo(key: Double, callback: Callback) {
+    module.getGaplessInfo(key, callback)
+  }
+
+  override fun preloadForGapless(key: Double, callback: Callback) {
+    module.preloadForGapless(key, callback)
+  }
+
 
   override fun getName(): String {
     return NAME

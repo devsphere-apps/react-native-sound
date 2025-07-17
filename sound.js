@@ -86,6 +86,13 @@ function Sound(filename, basePath, onError, options) {
   this._numberOfLoops = 0;
   this._speed = 1;
   this._pitch = 1;
+  
+  // Enhanced Gapless Looping Properties
+  this._gaplessLoopingEnabled = false;
+  this._gaplessLoopCount = 0;
+  this._gaplessTransitionType = 'instant';
+  this._totalLoopsCompleted = 0;
+  
   RNSound.prepare(this._filename, this._key, options || {}, (error, props) => {
     if (props) {
       if (typeof props.duration === 'number') {
@@ -232,6 +239,19 @@ Sound.prototype.getNumberOfLoops = function() {
 
 Sound.prototype.setNumberOfLoops = function(value) {
   this._numberOfLoops = value;
+  
+  // Backward compatibility enhancement: 
+  // For infinite loops (-1), automatically enable gapless if supported
+  if (value === -1 && this._loaded) {
+    // Try to enable gapless looping for seamless infinite loops
+    this._gaplessLoopingEnabled = true;
+    this._gaplessLoopCount = -1;
+    if (RNSound.setGaplessLooping) {
+      RNSound.setGaplessLooping(this._key, true);
+      RNSound.setGaplessLoopCount(this._key, -1);
+    }
+  }
+  
   if (this._loaded) {
     if (IsAndroid || IsWindows) {
       RNSound.setLooping(this._key, !!value);
@@ -293,6 +313,113 @@ Sound.prototype.setCategory = function(value) {
 Sound.prototype.isPlaying = function() {
   return this._playing;
 }
+
+// Enhanced Gapless Looping API for Professional Audio Applications
+
+Sound.prototype.setGaplessLooping = function(enabled) {
+  if (typeof enabled !== 'boolean') {
+    throw new Error('setGaplessLooping expects a boolean value');
+  }
+  
+  this._gaplessLoopingEnabled = enabled;
+  if (this._loaded && RNSound.setGaplessLooping) {
+    // Call native method to enable/disable gapless looping
+    RNSound.setGaplessLooping(this._key, enabled);
+  }
+  return this;
+};
+
+Sound.prototype.isGaplessLoopingEnabled = function() {
+  return this._gaplessLoopingEnabled;
+};
+
+Sound.prototype.setGaplessLoopCount = function(count) {
+  if (typeof count !== 'number' || !Number.isInteger(count)) {
+    throw new Error('setGaplessLoopCount expects an integer value');
+  }
+  
+  this._gaplessLoopCount = count;
+  if (this._loaded && this._gaplessLoopingEnabled && RNSound.setGaplessLoopCount) {
+    // Call native method to set gapless loop count
+    RNSound.setGaplessLoopCount(this._key, count);
+  }
+  return this;
+};
+
+Sound.prototype.getGaplessLoopCount = function() {
+  return this._gaplessLoopCount;
+};
+
+Sound.prototype.setGaplessTransitionType = function(type) {
+  if (type !== 'instant' && type !== 'crossfade') {
+    throw new Error('setGaplessTransitionType expects "instant" or "crossfade"');
+  }
+  
+  this._gaplessTransitionType = type;
+  if (this._loaded && this._gaplessLoopingEnabled && !IsAndroid && !IsWindows && RNSound.setGaplessTransitionType) {
+    // iOS only feature for now
+    RNSound.setGaplessTransitionType(this._key, type);
+  }
+  return this;
+};
+
+Sound.prototype.getGaplessInfo = function(callback) {
+  if (typeof callback !== 'function') {
+    throw new Error('getGaplessInfo expects a callback function');
+  }
+  
+  if (this._loaded && RNSound.getGaplessInfo) {
+    var self = this;
+    RNSound.getGaplessInfo(this._key, function(nativeInfo) {
+      callback({
+        isGaplessSupported: nativeInfo.isGaplessSupported || false,
+        isGaplessEnabled: self._gaplessLoopingEnabled,
+        currentLoopCount: self._gaplessLoopCount,
+        totalLoopsCompleted: self._totalLoopsCompleted,
+        transitionType: self._gaplessTransitionType,
+        memoryUsage: nativeInfo.memoryUsage
+      });
+    });
+  } else {
+    // Return default info if not loaded or method not available
+    callback({
+      isGaplessSupported: false,
+      isGaplessEnabled: this._gaplessLoopingEnabled,
+      currentLoopCount: this._gaplessLoopCount,
+      totalLoopsCompleted: this._totalLoopsCompleted,
+      transitionType: this._gaplessTransitionType
+    });
+  }
+};
+
+Sound.prototype.preloadForGapless = function(callback) {
+  if (typeof callback !== 'function') {
+    throw new Error('preloadForGapless expects a callback function');
+  }
+  
+  if (!this._loaded) {
+    callback(false, 'Sound must be loaded before preloading for gapless');
+    return;
+  }
+
+  if (!this._gaplessLoopingEnabled) {
+    callback(false, 'Gapless looping must be enabled before preloading');
+    return;
+  }
+
+  if (RNSound.preloadForGapless) {
+    RNSound.preloadForGapless(this._key, function(success, error) {
+      callback(success, error);
+    });
+  } else {
+    callback(false, 'Gapless preloading not supported on this platform');
+  }
+};
+
+// Convenience method to enable gapless mode (alias for setGaplessLooping)
+Sound.prototype.enableGaplessMode = function() {
+  return this.setGaplessLooping(true);
+};
 
 Sound.enable = function(enabled) {
   RNSound.enable(enabled);

@@ -35,6 +35,12 @@ export default () => {
   const timerRef = React.useRef<NodeJS.Timeout>();
   const [isLoading, setIsLoading] = React.useState(true);
 
+  // Enhanced Gapless Looping State
+  const [isGaplessEnabled, setIsGaplessEnabled] = React.useState(false);
+  const [gaplessLoopCount, setGaplessLoopCount] = React.useState(-1);
+  const [gaplessInfo, setGaplessInfo] = React.useState<any>(null);
+  const [isPreloading, setIsPreloading] = React.useState(false);
+
   React.useEffect(() => {
     sound.current = new Sound(
       'https://cdn.pixabay.com/download/audio/2024/10/27/audio_694158870e.mp3?filename=abnormal-for-you-255737.mp3',
@@ -47,6 +53,13 @@ export default () => {
         }
         if (props.duration) {
           setDuration(props.duration);
+        }
+        
+        // Load initial gapless info
+        if (sound.current) {
+          sound.current.getGaplessInfo((info) => {
+            setGaplessInfo(info);
+          });
         }
       },
     );
@@ -94,6 +107,59 @@ export default () => {
       sound.current.getCurrentTime(sec => {
         sound.current?.setCurrentTime(sec + 10);
       });
+    }
+  };
+
+  // Enhanced Gapless Looping Handlers
+
+  const onToggleGapless = () => {
+    if (sound.current) {
+      const newEnabled = !isGaplessEnabled;
+      sound.current.setGaplessLooping(newEnabled);
+      setIsGaplessEnabled(newEnabled);
+      
+      if (newEnabled) {
+        sound.current.setGaplessLoopCount(gaplessLoopCount);
+        
+        // Update gapless info
+        sound.current.getGaplessInfo((info) => {
+          setGaplessInfo(info);
+        });
+      }
+    }
+  };
+
+  const onChangeLoopCount = (count: number) => {
+    setGaplessLoopCount(count);
+    if (sound.current && isGaplessEnabled) {
+      sound.current.setGaplessLoopCount(count);
+    }
+  };
+
+  const onPreloadGapless = async () => {
+    if (sound.current && isGaplessEnabled) {
+      setIsPreloading(true);
+      try {
+        await sound.current.preloadForGapless();
+        Alert.alert('Success', 'Gapless preloading completed!');
+        
+        // Update info after preloading
+        sound.current.getGaplessInfo((info) => {
+          setGaplessInfo(info);
+        });
+      } catch (error) {
+        Alert.alert('Error', `Gapless preloading failed: ${error}`);
+      } finally {
+        setIsPreloading(false);
+      }
+    }
+  };
+
+  const onTestLegacyGapless = () => {
+    if (sound.current) {
+      // Test backward compatibility: setNumberOfLoops(-1) should enable gapless
+      sound.current.setNumberOfLoops(-1);
+      Alert.alert('Info', 'Legacy infinite loop enabled - should automatically use gapless!');
     }
   };
 
@@ -163,6 +229,89 @@ export default () => {
           />
         </TouchableOpacity>
       </View>
+
+      {/* Enhanced Gapless Looping Controls */}
+      <View style={styles.gapless_section}>
+        <Text style={styles.section_title}>🎵 Gapless Looping Controls</Text>
+        
+        <View style={styles.gapless_controls}>
+          <TouchableOpacity 
+            style={[styles.gapless_button, isGaplessEnabled && styles.gapless_button_active]}
+            onPress={onToggleGapless}
+          >
+            <Text style={[styles.gapless_button_text, isGaplessEnabled && styles.gapless_button_text_active]}>
+              {isGaplessEnabled ? 'Gapless ON' : 'Gapless OFF'}
+            </Text>
+          </TouchableOpacity>
+          
+          <View style={styles.loop_controls}>
+            <Text style={styles.control_label}>Loop Count:</Text>
+            <View style={styles.loop_buttons}>
+              <TouchableOpacity 
+                style={[styles.small_button, gaplessLoopCount === 0 && styles.small_button_active]}
+                onPress={() => onChangeLoopCount(0)}
+              >
+                <Text style={styles.small_button_text}>Once</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.small_button, gaplessLoopCount === 3 && styles.small_button_active]}
+                onPress={() => onChangeLoopCount(3)}
+              >
+                <Text style={styles.small_button_text}>3x</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.small_button, gaplessLoopCount === -1 && styles.small_button_active]}
+                onPress={() => onChangeLoopCount(-1)}
+              >
+                <Text style={styles.small_button_text}>∞</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.advanced_controls}>
+          <TouchableOpacity 
+            style={[styles.action_button, !isGaplessEnabled && styles.action_button_disabled]}
+            onPress={onPreloadGapless}
+            disabled={!isGaplessEnabled || isPreloading}
+          >
+            <Text style={styles.action_button_text}>
+              {isPreloading ? 'Preloading...' : 'Preload Gapless'}
+            </Text>
+          </TouchableOpacity>
+          
+          <TouchableOpacity 
+            style={styles.action_button}
+            onPress={onTestLegacyGapless}
+          >
+            <Text style={styles.action_button_text}>Test Legacy API</Text>
+          </TouchableOpacity>
+        </View>
+
+        {gaplessInfo && (
+          <View style={styles.info_section}>
+            <Text style={styles.info_title}>Gapless Info:</Text>
+            <Text style={styles.info_text}>
+              Supported: {gaplessInfo.isGaplessSupported ? '✅' : '❌'}
+            </Text>
+            <Text style={styles.info_text}>
+              Enabled: {gaplessInfo.isGaplessEnabled ? '✅' : '❌'}
+            </Text>
+            <Text style={styles.info_text}>
+              Loop Count: {gaplessInfo.currentLoopCount === -1 ? 'Infinite' : gaplessInfo.currentLoopCount}
+            </Text>
+            <Text style={styles.info_text}>
+              Loops Completed: {gaplessInfo.totalLoopsCompleted}
+            </Text>
+            {gaplessInfo.memoryUsage && (
+              <Text style={styles.info_text}>
+                Memory: {gaplessInfo.memoryUsage.toFixed(2)} MB
+              </Text>
+            )}
+          </View>
+        )}
+      </View>
+
     </SafeAreaView>
   );
 };
@@ -219,5 +368,109 @@ const styles = StyleSheet.create({
     width: '100%',
     alignItems: 'center',
     justifyContent: 'space-evenly',
+  },
+  gapless_section: {
+    paddingHorizontal: 20,
+    marginTop: 20,
+    backgroundColor: '#f5f5f5',
+    borderRadius: 10,
+    paddingVertical: 15,
+  },
+  section_title: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  gapless_controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 15,
+  },
+  gapless_button: {
+    backgroundColor: '#e75480',
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  gapless_button_active: {
+    backgroundColor: '#d32f50',
+  },
+  gapless_button_text: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  gapless_button_text_active: {
+    color: 'white',
+  },
+  loop_controls: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  control_label: {
+    fontSize: 16,
+    color: '#555',
+    marginRight: 10,
+  },
+  loop_buttons: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  small_button: {
+    backgroundColor: '#e0e0e0',
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginHorizontal: 5,
+  },
+  small_button_active: {
+    backgroundColor: '#e75480',
+  },
+  small_button_text: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  advanced_controls: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 15,
+  },
+  action_button: {
+    backgroundColor: '#e75480',
+    paddingVertical: 12,
+    paddingHorizontal: 25,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  action_button_disabled: {
+    backgroundColor: '#ccc',
+    opacity: 0.7,
+  },
+  action_button_text: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  info_section: {
+    marginTop: 20,
+    paddingTop: 15,
+    borderTopWidth: 1,
+    borderTopColor: '#eee',
+  },
+  info_title: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  info_text: {
+    fontSize: 14,
+    color: '#555',
+    marginBottom: 5,
   },
 });

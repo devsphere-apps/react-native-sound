@@ -78,6 +78,27 @@ class SoundModule internal constructor(context: ReactApplicationContext) :
     module.setSystemVolume(value.toFloat())
   }
 
+  // Enhanced Gapless Looping Methods
+  @ReactMethod
+  override fun setGaplessLooping(key: Double, enabled: Boolean) {
+    module.setGaplessLooping(key, enabled)
+  }
+
+  @ReactMethod
+  override fun setGaplessLoopCount(key: Double, count: Double) {
+    module.setGaplessLoopCount(key, count)
+  }
+
+  @ReactMethod
+  override fun getGaplessInfo(key: Double, callback: Callback) {
+    module.getGaplessInfo(key, callback)
+  }
+
+  @ReactMethod
+  override fun preloadForGapless(key: Double, callback: Callback) {
+    module.preloadForGapless(key, callback)
+  }
+
   @ReactMethod
   override fun addListener(eventName: String){
     // Keep: Needed for RN built in Event Emitter Calls

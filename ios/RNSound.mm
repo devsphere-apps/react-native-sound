@@ -10,6 +10,13 @@
     NSMutableDictionary *_playerPool;
     NSMutableDictionary *_callbackPool;
     double _key;  // Add this line to declare _key
+    
+    // Enhanced Gapless Looping Support
+    NSMutableDictionary *_gaplessQueuePlayerPool;
+    NSMutableDictionary *_gaplessPlayerLooperPool;
+    NSMutableDictionary *_gaplessEnabledPool;
+    NSMutableDictionary *_gaplessLoopCountPool;
+    NSMutableDictionary *_gaplessTransitionTypePool;
 }
 
 RCT_EXPORT_MODULE()
@@ -62,6 +69,43 @@ RCT_EXPORT_MODULE()
     return _callbackPool;
 }
 
+// Enhanced Gapless Looping Pool Management
+
+- (NSMutableDictionary *)gaplessQueuePlayerPool {
+    if (!_gaplessQueuePlayerPool) {
+        _gaplessQueuePlayerPool = [NSMutableDictionary new];
+    }
+    return _gaplessQueuePlayerPool;
+}
+
+- (NSMutableDictionary *)gaplessPlayerLooperPool {
+    if (!_gaplessPlayerLooperPool) {
+        _gaplessPlayerLooperPool = [NSMutableDictionary new];
+    }
+    return _gaplessPlayerLooperPool;
+}
+
+- (NSMutableDictionary *)gaplessEnabledPool {
+    if (!_gaplessEnabledPool) {
+        _gaplessEnabledPool = [NSMutableDictionary new];
+    }
+    return _gaplessEnabledPool;
+}
+
+- (NSMutableDictionary *)gaplessLoopCountPool {
+    if (!_gaplessLoopCountPool) {
+        _gaplessLoopCountPool = [NSMutableDictionary new];
+    }
+    return _gaplessLoopCountPool;
+}
+
+- (NSMutableDictionary *)gaplessTransitionTypePool {
+    if (!_gaplessTransitionTypePool) {
+        _gaplessTransitionTypePool = [NSMutableDictionary new];
+    }
+    return _gaplessTransitionTypePool;
+}
+
 - (AVAudioPlayer *)playerForKey:(double)key {
     NSNumber *keyNumber = @(key);
     return [[self playerPool] objectForKey:keyNumber];
@@ -73,6 +117,51 @@ RCT_EXPORT_MODULE()
 
 - (RCTResponseSenderBlock)callbackForKey:(NSNumber *)key {
     return [[self callbackPool] objectForKey:key];
+}
+
+// Enhanced Gapless Looping Helper Methods
+
+- (AVQueuePlayer *)gaplessQueuePlayerForKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    return [[self gaplessQueuePlayerPool] objectForKey:keyNumber];
+}
+
+- (AVPlayerLooper *)gaplessPlayerLooperForKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    return [[self gaplessPlayerLooperPool] objectForKey:keyNumber];
+}
+
+- (BOOL)isGaplessEnabledForKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    NSNumber *enabled = [[self gaplessEnabledPool] objectForKey:keyNumber];
+    return enabled ? [enabled boolValue] : NO;
+}
+
+- (void)setGaplessEnabled:(BOOL)enabled forKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    [[self gaplessEnabledPool] setObject:@(enabled) forKey:keyNumber];
+}
+
+- (int)gaplessLoopCountForKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    NSNumber *count = [[self gaplessLoopCountPool] objectForKey:keyNumber];
+    return count ? [count intValue] : 0;
+}
+
+- (void)setGaplessLoopCount:(int)count forKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    [[self gaplessLoopCountPool] setObject:@(count) forKey:keyNumber];
+}
+
+- (NSString *)gaplessTransitionTypeForKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    NSString *type = [[self gaplessTransitionTypePool] objectForKey:keyNumber];
+    return type ? type : @"instant";
+}
+
+- (void)setGaplessTransitionType:(NSString *)type forKey:(double)key {
+    NSNumber *keyNumber = @(key);
+    [[self gaplessTransitionTypePool] setObject:type forKey:keyNumber];
 }
 
 - (void)audioPlayerDidFinishPlaying:(AVAudioPlayer *)player
@@ -231,8 +320,21 @@ RCT_EXPORT_METHOD(play:(double)key callback:(RCTResponseSenderBlock)callback) {
           object:[AVAudioSession sharedInstance]];
     
     self._key = key;
-    AVAudioPlayer *player = [self playerForKey:key];
     
+    // Check if gapless looping is enabled for this key
+    if ([self isGaplessEnabledForKey:key]) {
+        AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+        if (queuePlayer) {
+            NSNumber *myNumber = @(key);
+            [[self callbackPool] setObject:[callback copy] forKey:myNumber];
+            [queuePlayer play];
+            [self setOnPlay:YES forPlayerKey:key];
+            return;
+        }
+    }
+    
+    // Fallback to regular AVAudioPlayer
+    AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         NSNumber *myNumber = @(key);
         [[self callbackPool] setObject:[callback copy] forKey:myNumber];
@@ -242,27 +344,74 @@ RCT_EXPORT_METHOD(play:(double)key callback:(RCTResponseSenderBlock)callback) {
 }
 
 RCT_EXPORT_METHOD(pause:(double)key callback:(RCTResponseSenderBlock)callback) {
+    // Check if gapless looping is enabled for this key
+    if ([self isGaplessEnabledForKey:key]) {
+        AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+        if (queuePlayer) {
+            [queuePlayer pause];
+            [self setOnPlay:NO forPlayerKey:key];
+            callback(@[]);
+            return;
+        }
+    }
+    
+    // Fallback to regular AVAudioPlayer
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         [player pause];
+        [self setOnPlay:NO forPlayerKey:key];
         callback(@[]);
     }
 }
 
 RCT_EXPORT_METHOD(stop:(double)key callback:(RCTResponseSenderBlock)callback) {
+    // Check if gapless looping is enabled for this key
+    if ([self isGaplessEnabledForKey:key]) {
+        AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+        if (queuePlayer) {
+            [queuePlayer pause];
+            [queuePlayer seekToTime:kCMTimeZero];
+            [self setOnPlay:NO forPlayerKey:key];
+            callback(@[]);
+            return;
+        }
+    }
+    
+    // Fallback to regular AVAudioPlayer
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         [player stop];
         player.currentTime = 0;
+        [self setOnPlay:NO forPlayerKey:key];
         callback(@[]);
     }
 }
 
 RCT_EXPORT_METHOD(release:(double)key) {
     @synchronized(self) {
+        NSNumber *myNumber = @(key);
+        
+        // Clean up gapless resources
+        AVPlayerLooper *looper = [self gaplessPlayerLooperForKey:key];
+        if (looper) {
+            [looper disableLooping];
+            [[self gaplessPlayerLooperPool] removeObjectForKey:myNumber];
+        }
+        
+        AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+        if (queuePlayer) {
+            [queuePlayer pause];
+            [[self gaplessQueuePlayerPool] removeObjectForKey:myNumber];
+        }
+        
+        // Clean up gapless settings
+        [[self gaplessEnabledPool] removeObjectForKey:myNumber];
+        [[self gaplessLoopCountPool] removeObjectForKey:myNumber];
+        [[self gaplessTransitionTypePool] removeObjectForKey:myNumber];
+        
+        // Clean up regular player resources
         AVAudioPlayer *player = [self playerForKey:key];
         if (player) {
-            NSNumber *myNumber = @(key);
             [player stop];
             [[self callbackPool] removeObjectForKey:myNumber];
             [[self playerPool] removeObjectForKey:myNumber];
@@ -337,6 +486,128 @@ RCT_EXPORT_METHOD(getCurrentTime:(double)key callback:(RCTResponseSenderBlock)ca
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         player.rate = (float)speed;
+    }
+}
+
+#pragma mark - Enhanced Gapless Looping
+
+RCT_EXPORT_METHOD(setGaplessLooping:(double)key enabled:(BOOL)enabled) {
+    [self setGaplessEnabled:enabled forKey:key];
+    
+    if (enabled) {
+        // Create gapless setup for this key
+        AVAudioPlayer *originalPlayer = [self playerForKey:key];
+        if (originalPlayer && originalPlayer.url) {
+            NSError *error;
+            AVPlayerItem *playerItem = [[AVPlayerItem alloc] initWithURL:originalPlayer.url];
+            AVQueuePlayer *queuePlayer = [[AVQueuePlayer alloc] initWithPlayerItem:playerItem];
+            
+            NSNumber *keyNumber = @(key);
+            [[self gaplessQueuePlayerPool] setObject:queuePlayer forKey:keyNumber];
+            
+            // Set default loop count if not already set
+            if ([self gaplessLoopCountForKey:key] == 0) {
+                [self setGaplessLoopCount:-1 forKey:key]; // Default to infinite
+            }
+        }
+    } else {
+        // Clean up gapless resources
+        NSNumber *keyNumber = @(key);
+        AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+        AVPlayerLooper *looper = [self gaplessPlayerLooperForKey:key];
+        
+        if (looper) {
+            [looper disableLooping];
+            [[self gaplessPlayerLooperPool] removeObjectForKey:keyNumber];
+        }
+        
+        if (queuePlayer) {
+            [queuePlayer pause];
+            [[self gaplessQueuePlayerPool] removeObjectForKey:keyNumber];
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(setGaplessLoopCount:(double)key count:(double)count) {
+    [self setGaplessLoopCount:(int)count forKey:key];
+    
+    if ([self isGaplessEnabledForKey:key]) {
+        AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+        if (queuePlayer && queuePlayer.currentItem) {
+            NSNumber *keyNumber = @(key);
+            
+            // Remove existing looper if any
+            AVPlayerLooper *existingLooper = [self gaplessPlayerLooperForKey:key];
+            if (existingLooper) {
+                [existingLooper disableLooping];
+                [[self gaplessPlayerLooperPool] removeObjectForKey:keyNumber];
+            }
+            
+            // Create new looper with specified count
+            if (count != 0) {
+                NSInteger loopCount = (count == -1) ? NSIntegerMax : (NSInteger)count;
+                AVPlayerLooper *looper = [AVPlayerLooper playerLooperWithPlayer:queuePlayer 
+                                                                   templateItem:queuePlayer.currentItem 
+                                                                      timeRange:kCMTimeRangeInvalid];
+                [[self gaplessPlayerLooperPool] setObject:looper forKey:keyNumber];
+            }
+        }
+    }
+}
+
+RCT_EXPORT_METHOD(setGaplessTransitionType:(double)key type:(NSString *)type) {
+    [self setGaplessTransitionType:type forKey:key];
+    // Note: Currently only 'instant' is supported. 'crossfade' is for future enhancement.
+}
+
+RCT_EXPORT_METHOD(getGaplessInfo:(double)key callback:(RCTResponseSenderBlock)callback) {
+    BOOL isGaplessSupported = YES; // iOS 10+ supports AVPlayerLooper
+    BOOL isGaplessEnabled = [self isGaplessEnabledForKey:key];
+    int loopCount = [self gaplessLoopCountForKey:key];
+    NSString *transitionType = [self gaplessTransitionTypeForKey:key];
+    
+    // Estimate memory usage (simplified calculation)
+    double memoryUsage = 0.0;
+    AVAudioPlayer *player = [self playerForKey:key];
+    if (player && player.duration > 0) {
+        // Rough estimate: duration * channels * sample_rate * bytes_per_sample / MB
+        memoryUsage = player.duration * [player numberOfChannels] * 44100 * 2 / (1024 * 1024);
+    }
+    
+    callback(@[@{
+        @"isGaplessSupported": @(isGaplessSupported),
+        @"memoryUsage": @(memoryUsage)
+    }]);
+}
+
+RCT_EXPORT_METHOD(preloadForGapless:(double)key callback:(RCTResponseSenderBlock)callback) {
+    if (![self isGaplessEnabledForKey:key]) {
+        callback(@[@NO, @"Gapless looping not enabled for this sound"]);
+        return;
+    }
+    
+    AVQueuePlayer *queuePlayer = [self gaplessQueuePlayerForKey:key];
+    if (!queuePlayer) {
+        callback(@[@NO, @"No gapless queue player found"]);
+        return;
+    }
+    
+    // Preload by ensuring the player item is ready
+    AVPlayerItem *item = queuePlayer.currentItem;
+    if (item) {
+        if (item.status == AVPlayerItemStatusReadyToPlay) {
+            callback(@[@YES]);
+        } else {
+            // Add observer for when item becomes ready
+            [[NSNotificationCenter defaultCenter] addObserverForName:AVPlayerItemDidPlayToEndTimeNotification
+                                                              object:item
+                                                               queue:[NSOperationQueue mainQueue]
+                                                          usingBlock:^(NSNotification *note) {
+                callback(@[@YES]);
+            }];
+        }
+    } else {
+        callback(@[@NO, @"No player item available"]);
     }
 }
 

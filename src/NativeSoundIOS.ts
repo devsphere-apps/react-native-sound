@@ -39,6 +39,22 @@ export interface Spec extends TurboModule {
   setNumberOfLoops: (key: number, loops: number) => void;
   addListener: (eventName: string) => void;
   removeListeners: (count: number) => void;
+
+  // Enhanced Gapless Looping Methods
+  setGaplessLooping: (key: number, enabled: boolean) => void;
+  setGaplessLoopCount: (key: number, count: number) => void;
+  setGaplessTransitionType: (key: number, type: 'instant' | 'crossfade') => void;
+  getGaplessInfo: (
+    key: number, 
+    callback: (info: {
+      isGaplessSupported: boolean;
+      memoryUsage?: number;
+    }) => void
+  ) => void;
+  preloadForGapless: (
+    key: number, 
+    callback: (success: boolean, error?: string) => void
+  ) => void;
 }
 
 export default TurboModuleRegistry.getEnforcing<Spec>("RNSound") as Spec;

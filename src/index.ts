@@ -65,6 +65,12 @@ class Sound {
   private _pitch: number;
   private onPlaySubscription: EmitterSubscription;
 
+  // Enhanced Gapless Looping Properties
+  private _gaplessLoopingEnabled: boolean;
+  private _gaplessLoopCount: number;
+  private _gaplessTransitionType: 'instant' | 'crossfade';
+  private _totalLoopsCompleted: number;
+
   constructor(
     filename: string,
     basePath?: string | ((error: string, props: SoundProps) => void),
@@ -95,6 +101,12 @@ class Sound {
     this._numberOfLoops = 0;
     this._speed = 1;
     this._pitch = 1;
+
+    // Enhanced Gapless Looping Properties
+    this._gaplessLoopingEnabled = false;
+    this._gaplessLoopCount = 0;
+    this._gaplessTransitionType = 'instant';
+    this._totalLoopsCompleted = 0;
 
     RNSound.prepare(
       this._filename,
@@ -286,6 +298,19 @@ class Sound {
 
   public setNumberOfLoops(value: number): Sound {
     this._numberOfLoops = value;
+    
+    // Backward compatibility enhancement: 
+    // For infinite loops (-1), automatically enable gapless if supported
+    if (value === -1 && this._loaded) {
+      // Try to enable gapless looping for seamless infinite loops
+      this._gaplessLoopingEnabled = true;
+      this._gaplessLoopCount = -1;
+      if (RNSound.setGaplessLooping) {
+        RNSound.setGaplessLooping(this._key, true);
+        RNSound.setGaplessLoopCount(this._key, -1);
+      }
+    }
+    
     if (this._loaded) {
       if (IsAndroid || IsWindows) {
         RNSound.setLooping(this._key, !!value);
@@ -344,6 +369,96 @@ class Sound {
 
   public isPlaying(): boolean {
     return this._playing;
+  }
+
+  // Enhanced Gapless Looping API for Professional Audio Applications
+
+  public setGaplessLooping(enabled: boolean): Sound {
+    this._gaplessLoopingEnabled = enabled;
+    if (this._loaded) {
+      // Call native method to enable/disable gapless looping
+      RNSound.setGaplessLooping(this._key, enabled);
+    }
+    return this;
+  }
+
+  public isGaplessLoopingEnabled(): boolean {
+    return this._gaplessLoopingEnabled;
+  }
+
+  public setGaplessLoopCount(count: number): Sound {
+    this._gaplessLoopCount = count;
+    if (this._loaded && this._gaplessLoopingEnabled) {
+      // Call native method to set gapless loop count
+      RNSound.setGaplessLoopCount(this._key, count);
+    }
+    return this;
+  }
+
+  public getGaplessLoopCount(): number {
+    return this._gaplessLoopCount;
+  }
+
+  public setGaplessTransitionType(type: 'instant' | 'crossfade'): Sound {
+    this._gaplessTransitionType = type;
+    if (this._loaded && this._gaplessLoopingEnabled && !IsAndroid && !IsWindows) {
+      // iOS only feature for now
+      RNSound.setGaplessTransitionType(this._key, type);
+    }
+    return this;
+  }
+
+  public getGaplessInfo(callback: (info: {
+    isGaplessSupported: boolean;
+    isGaplessEnabled: boolean;
+    currentLoopCount: number;
+    totalLoopsCompleted: number;
+    transitionType: 'instant' | 'crossfade';
+    memoryUsage?: number;
+  }) => void): void {
+    if (this._loaded) {
+      RNSound.getGaplessInfo(this._key, (nativeInfo: any) => {
+        callback({
+          isGaplessSupported: nativeInfo.isGaplessSupported || false,
+          isGaplessEnabled: this._gaplessLoopingEnabled,
+          currentLoopCount: this._gaplessLoopCount,
+          totalLoopsCompleted: this._totalLoopsCompleted,
+          transitionType: this._gaplessTransitionType,
+          memoryUsage: nativeInfo.memoryUsage
+        });
+      });
+    } else {
+      // Return default info if not loaded
+      callback({
+        isGaplessSupported: false,
+        isGaplessEnabled: this._gaplessLoopingEnabled,
+        currentLoopCount: this._gaplessLoopCount,
+        totalLoopsCompleted: this._totalLoopsCompleted,
+        transitionType: this._gaplessTransitionType
+      });
+    }
+  }
+
+  public preloadForGapless(): Promise<void> {
+    return new Promise((resolve, reject) => {
+      if (!this._loaded) {
+        reject(new Error('Sound must be loaded before preloading for gapless'));
+        return;
+      }
+
+      if (!this._gaplessLoopingEnabled) {
+        reject(new Error('Gapless looping must be enabled before preloading'));
+        return;
+      }
+
+      RNSound.preloadForGapless(this._key, (success: boolean, error?: string) => {
+        if (success) {
+          resolve();
+        } else {
+          reject(new Error(error || 'Failed to preload for gapless'));
+        }
+      });
+    });
   }
 
   public static enableInSilenceMode(enabled: boolean): void {

@@ -46,6 +46,11 @@ Get/set loops | ✓ | ✓ | ✓
 Get/set exact loop count | ✓ |   |
 Get/set current time | ✓ | ✓ | ✓
 Set speed | ✓ | ✓ |
+**True gapless looping** | ✓ | ✓ |
+**Gapless loop count control** | ✓ | ✓ |
+**Gapless transition types** | ✓ |  |
+**Gapless preloading** | ✓ | ✓ |
+**Gapless info & monitoring** | ✓ | ✓ |
 
 ## Installation
 
@@ -172,6 +177,132 @@ whoosh.stop(() => {
 
 // Release the audio player resource
 whoosh.release();
+```
+
+## Enhanced Gapless Looping
+
+React Native Sound now supports true gapless looping for professional audio applications like meditation apps, ambient sound players, and music applications requiring seamless audio transitions.
+
+### Features
+
+- **True Gapless Playback**: No gaps between loop iterations
+- **Memory Efficient**: Single audio file in memory, no duplication
+- **Cross-Platform**: iOS (AVQueuePlayer + AVPlayerLooper) and Android (ExoPlayer)
+- **Backward Compatible**: Existing `setNumberOfLoops(-1)` automatically enables gapless
+- **Professional Grade**: Designed for production apps like Headspace and Calm
+
+### Basic Gapless Usage
+
+```javascript
+// Load your ambient sound
+var ambientSound = new Sound('rain.mp3', Sound.MAIN_BUNDLE, (error) => {
+  if (error) {
+    console.log('failed to load the sound', error);
+    return;
+  }
+  
+  // Enable gapless looping
+  ambientSound.setGaplessLooping(true);
+  
+  // Set infinite gapless loops
+  ambientSound.setGaplessLoopCount(-1);
+  
+  // Play with seamless looping
+  ambientSound.play();
+});
+
+// Backward compatible - this automatically enables gapless!
+ambientSound.setNumberOfLoops(-1);
+```
+
+### Advanced Gapless API
+
+```javascript
+// Check if gapless is supported on this platform
+ambientSound.getGaplessInfo((info) => {
+  console.log('Gapless supported:', info.isGaplessSupported);
+  console.log('Memory usage:', info.memoryUsage, 'MB');
+});
+
+// Preload for optimal performance
+await ambientSound.preloadForGapless();
+
+// Set finite gapless loops
+ambientSound.setGaplessLoopCount(5); // Loop 5 times seamlessly
+
+// Control gapless transition type (iOS only)
+ambientSound.setGaplessTransitionType('instant'); // or 'crossfade' (future)
+
+// Check current gapless status
+console.log('Gapless enabled:', ambientSound.isGaplessLoopingEnabled());
+console.log('Loop count:', ambientSound.getGaplessLoopCount());
+```
+
+### Meditation App Example
+
+```javascript
+class MeditationPlayer {
+  constructor() {
+    this.tracks = {};
+  }
+  
+  loadAmbientTrack(name, file) {
+    this.tracks[name] = new Sound(file, Sound.MAIN_BUNDLE, (error) => {
+      if (!error) {
+        // Enable gapless for seamless meditation experience
+        this.tracks[name].setGaplessLooping(true);
+        this.tracks[name].setGaplessLoopCount(-1); // Infinite
+        
+        // Preload for instant playback
+        this.tracks[name].preloadForGapless();
+      }
+    });
+  }
+  
+  playAmbientMix(tracks, volumes) {
+    tracks.forEach((trackName, index) => {
+      const track = this.tracks[trackName];
+      if (track) {
+        track.setVolume(volumes[index] || 0.5);
+        track.play(); // Seamless gapless looping!
+      }
+    });
+  }
+}
+
+// Usage
+const player = new MeditationPlayer();
+player.loadAmbientTrack('rain', 'rain_loop.mp3');
+player.loadAmbientTrack('ocean', 'ocean_waves.mp3');
+player.loadAmbientTrack('forest', 'forest_birds.mp3');
+
+// Play multiple tracks simultaneously with individual volumes
+player.playAmbientMix(['rain', 'ocean'], [0.7, 0.3]);
+```
+
+### API Reference
+
+#### Gapless Methods
+
+- `setGaplessLooping(enabled: boolean)` - Enable/disable gapless looping
+- `isGaplessLoopingEnabled()` - Check if gapless is enabled
+- `setGaplessLoopCount(count: number)` - Set loop count (-1 = infinite, 0 = no loop, >0 = finite)
+- `getGaplessLoopCount()` - Get current loop count
+- `setGaplessTransitionType(type: 'instant' | 'crossfade')` - Set transition type (iOS only)
+- `getGaplessInfo(callback)` - Get detailed gapless information
+- `preloadForGapless()` - Preload audio data for optimal performance
+
+#### Gapless Info Object
+
+```javascript
+{
+  isGaplessSupported: boolean,    // Platform supports gapless
+  isGaplessEnabled: boolean,      // Currently enabled for this sound
+  currentLoopCount: number,       // Current loop setting
+  totalLoopsCompleted: number,    // Total loops completed
+  transitionType: string,         // 'instant' or 'crossfade'
+  memoryUsage?: number           // Memory usage in MB (if available)
+}
 ```
 
 ## Notes

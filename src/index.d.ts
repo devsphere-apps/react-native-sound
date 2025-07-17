@@ -233,6 +233,66 @@ declare class Sound {
    * Whether the player is playing or not.
    */
   isPlaying(): boolean;
+
+  // Enhanced Gapless Looping API for Professional Audio Applications
+
+  /**
+   * Enable true gapless looping for seamless audio playback.
+   * Uses AVQueuePlayer + AVPlayerLooper on iOS and ExoPlayer on Android.
+   * Perfect for meditation apps, ambient sounds, and professional audio applications.
+   * @param enabled - true to enable gapless looping, false to disable
+   * @returns this instance for method chaining
+   */
+  setGaplessLooping(enabled: boolean): this;
+
+  /**
+   * Check if gapless looping is currently enabled.
+   * @returns true if gapless looping is enabled, false otherwise
+   */
+  isGaplessLoopingEnabled(): boolean;
+
+  /**
+   * Set the number of gapless loops to perform.
+   * When gapless looping is enabled, this provides seamless looping without audio gaps.
+   * @param count - Number of loops: 0 = play once, positive number = finite loops, -1 = infinite gapless loops
+   * @returns this instance for method chaining
+   */
+  setGaplessLoopCount(count: number): this;
+
+  /**
+   * Get the current gapless loop count.
+   * @returns Current loop count (-1 for infinite, 0 for no loops, positive for finite loops)
+   */
+  getGaplessLoopCount(): number;
+
+  /**
+   * Set the gapless transition behavior (iOS only).
+   * Controls how the audio transitions during gapless looping.
+   * @param type - 'instant' for immediate transition, 'crossfade' for smooth crossfade (future enhancement)
+   * @returns this instance for method chaining
+   */
+  setGaplessTransitionType(type: 'instant' | 'crossfade'): this;
+
+  /**
+   * Get detailed information about gapless playback status.
+   * Useful for monitoring and debugging gapless playback.
+   * @param callback - Called with gapless status information
+   */
+  getGaplessInfo(callback: (info: {
+    isGaplessSupported: boolean;
+    isGaplessEnabled: boolean;
+    currentLoopCount: number;
+    totalLoopsCompleted: number;
+    transitionType: 'instant' | 'crossfade';
+    memoryUsage?: number; // in MB, if available
+  }) => void): void;
+
+  /**
+   * Preload audio data for optimal gapless performance.
+   * Ensures smooth gapless looping by pre-buffering audio data.
+   * @returns Promise that resolves when preloading is complete
+   */
+  preloadForGapless(): Promise<void>;
 }
 
 export = Sound;

@@ -27,4 +27,10 @@ abstract class SoundSpec internal constructor(context: ReactApplicationContext) 
   abstract fun addListener(eventName: String)
   abstract fun removeListeners(count: Double)
 
+  // Enhanced Gapless Looping Methods
+  abstract fun setGaplessLooping(key: Double, enabled: Boolean)
+  abstract fun setGaplessLoopCount(key: Double, count: Double)
+  abstract fun getGaplessInfo(key: Double, callback: Callback)
+  abstract fun preloadForGapless(key: Double, callback: Callback)
+
 }
