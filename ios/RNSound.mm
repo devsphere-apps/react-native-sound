@@ -419,6 +419,18 @@ RCT_EXPORT_METHOD(setSpeakerphoneOn:(double)key value:(BOOL)value) {
     [self setSpeakerPhone:key isSpeaker:value];
 }
 
+RCT_EXPORT_METHOD(setSpeakerPhone:(BOOL)isSpeaker) {
+    AVAudioSession *session = [AVAudioSession sharedInstance];
+    
+    if (isSpeaker) {
+        [session overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
+    } else {
+        [session overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
+    }
+    
+    [session setActive:YES error:nil];
+}
+
 #pragma mark - Event Handling
 
 RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getDirectories) {

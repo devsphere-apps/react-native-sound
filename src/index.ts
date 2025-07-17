@@ -379,17 +379,20 @@ class Sound {
     }
   }
 
-  public static MAIN_BUNDLE = IsAndroid
-    ? ""
-    : RNSound.getDirectories().MainBundlePath;
-  public static DOCUMENT = IsAndroid
-    ? ""
-    : RNSound.getDirectories().NSDocumentDirectory;
-  public static LIBRARY = IsAndroid
-    ? ""
-    : RNSound.getDirectories().NSLibraryDirectory;
-  public static CACHES = IsAndroid
-    ? ""
-    : RNSound.getDirectories().NSCachesDirectory;
+  public static get MAIN_BUNDLE(): string {
+    return IsAndroid ? "" : RNSound.getDirectories().MainBundlePath;
+  }
+  
+  public static get DOCUMENT(): string {
+    return IsAndroid ? "" : RNSound.getDirectories().NSDocumentDirectory;
+  }
+  
+  public static get LIBRARY(): string {
+    return IsAndroid ? "" : RNSound.getDirectories().NSLibraryDirectory;
+  }
+  
+  public static get CACHES(): string {
+    return IsAndroid ? "" : RNSound.getDirectories().NSCachesDirectory;
+  }
 }
 export default Sound;
