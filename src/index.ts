@@ -395,4 +395,6 @@ class Sound {
     return IsAndroid ? "" : RNSound.getDirectories().NSCachesDirectory;
   }
 }
+
 export default Sound;
+export { Sound };
