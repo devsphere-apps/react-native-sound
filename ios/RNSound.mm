@@ -111,6 +111,7 @@ RCT_EXPORT_MODULE()
 - (NSDictionary *)constantsToExport {
     return @{
         @"IsAndroid": @NO,
+        @"IsWindows": @NO,
         @"MainBundlePath": [[NSBundle mainBundle] bundlePath],
         @"NSDocumentDirectory": [self getDirectory:NSDocumentDirectory],
         @"NSLibraryDirectory": [self getDirectory:NSLibraryDirectory],
@@ -355,22 +356,21 @@ RCT_EXPORT_METHOD(getCurrentTime:(double)key callback:(RCTResponseSenderBlock)ca
 
 #pragma mark - Playback Controls
 
-
-- (void)setCurrentTime:(double)key currentTime:(double)currentTime {
+RCT_EXPORT_METHOD(setCurrentTime:(double)key currentTime:(double)currentTime) {
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         player.currentTime = currentTime;
     }
 }
 
-- (void)setPan:(double)key pan:(double)pan {
+RCT_EXPORT_METHOD(setPan:(double)key pan:(double)pan) {
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         player.pan = (float)pan;
     }
 }
 
-- (void)setSpeakerPhone:(double)key isSpeaker:(BOOL)isSpeaker {
+RCT_EXPORT_METHOD(setSpeakerPhone:(double)key isSpeaker:(BOOL)isSpeaker) {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     
     if (isSpeaker) {
@@ -382,11 +382,41 @@ RCT_EXPORT_METHOD(getCurrentTime:(double)key callback:(RCTResponseSenderBlock)ca
     [session setActive:YES error:nil];
 }
 
-- (void)setSpeed:(double)key speed:(double)speed {
+RCT_EXPORT_METHOD(setSpeed:(double)key speed:(double)speed) {
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
         player.rate = (float)speed;
     }
+}
+
+RCT_EXPORT_METHOD(reset:(double)key) {
+    AVAudioPlayer *player = [self playerForKey:key];
+    if (player) {
+        [player stop];
+        player.currentTime = 0;
+    }
+}
+
+RCT_EXPORT_METHOD(setLooping:(double)key looping:(BOOL)looping) {
+    AVAudioPlayer *player = [self playerForKey:key];
+    if (player) {
+        player.numberOfLoops = looping ? -1 : 0;
+    }
+}
+
+RCT_EXPORT_METHOD(setSystemVolume:(double)value) {
+    // Note: iOS doesn't allow programmatic system volume changes
+    // This method is kept for API compatibility but does nothing
+}
+
+RCT_EXPORT_METHOD(setPitch:(double)key pitch:(double)pitch) {
+    // Note: AVAudioPlayer doesn't support pitch control directly
+    // This would require using AVAudioEngine for pitch shifting
+    // This method is kept for API compatibility but does nothing
+}
+
+RCT_EXPORT_METHOD(setSpeakerphoneOn:(double)key value:(BOOL)value) {
+    [self setSpeakerPhone:key isSpeaker:value];
 }
 
 #pragma mark - Event Handling
