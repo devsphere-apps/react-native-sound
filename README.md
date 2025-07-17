@@ -1,14 +1,14 @@
 # react-native-sound
 
+> **🎵 Enhanced Fork with Gapless Looping**: This is an enhanced version of react-native-sound featuring true gapless looping for professional audio applications. Based on the original [zmxv/react-native-sound](https://github.com/zmxv/react-native-sound) with additional professional-grade audio capabilities.
+
 [![](https://img.shields.io/npm/v/react-native-sound.svg?style=flat-square)][npm]
 [![](https://img.shields.io/npm/l/react-native-sound.svg?style=flat-square)][npm]
 [![](https://img.shields.io/npm/dm/react-native-sound.svg?style=flat-square)][npm]
 
 [npm]: https://www.npmjs.com/package/react-native-sound
 
-⚠️ We need help to maintain react-native-sound https://github.com/zmxv/react-native-sound/pulls
-
-React Native module for playing sound clips on iOS, Android, and Windows.
+React Native module for playing sound clips on iOS, Android, and Windows with enhanced gapless looping capabilities.
 
 Be warned, this software is alpha quality and may have bugs. Test on your own
 and use at your own risk!
@@ -54,11 +54,30 @@ Set speed | ✓ | ✓ |
 
 ## Installation
 
-First install the npm package from your app directory:
+### Enhanced Gapless Version (Recommended)
+
+**⚠️ For Gapless Looping Functionality**: Install our enhanced fork with true gapless looping:
+
+```bash
+npm install github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping --save
+```
+
+Or using yarn:
+
+```bash
+yarn add github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping
+```
+
+### Standard Installation
+
+For basic functionality without gapless looping, install the original package:
 
 ```javascript
 npm install react-native-sound --save
 ```
+
+### Platform Setup
+
 Note: If your react-native version is >= 0.60 then linking is done automatically.
 
 If your react-native version is < 0.60 then link it using:
@@ -182,6 +201,8 @@ whoosh.release();
 ## Enhanced Gapless Looping
 
 React Native Sound now supports true gapless looping for professional audio applications like meditation apps, ambient sound players, and music applications requiring seamless audio transitions.
+
+> **📖 Complete Documentation**: For comprehensive gapless looping documentation with detailed examples, API reference, and best practices, see [GAPLESS_DOCUMENTATION.md](./GAPLESS_DOCUMENTATION.md)
 
 ### Features
 

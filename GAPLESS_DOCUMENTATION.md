@@ -1,5 +1,19 @@
 # React Native Sound - Gapless Looping Documentation
 
+> **🎯 Enhanced Fork**: This documentation covers the enhanced gapless looping functionality available in our forked version at [devsphere-apps/react-native-sound](https://github.com/devsphere-apps/react-native-sound/tree/feat/enhanced-gapless-looping). This feature is not yet available in the official react-native-sound package.
+
+### Package Comparison
+
+| Feature | Original Package | Enhanced Fork |
+|---------|-----------------|---------------|
+| Basic audio playback | ✅ | ✅ |
+| Traditional looping | ✅ | ✅ |
+| **True gapless looping** | ❌ | ✅ |
+| **Professional audio APIs** | ❌ | ✅ |
+| **Memory-efficient looping** | ❌ | ✅ |
+| **Meditation app ready** | ❌ | ✅ |
+| Installation | `npm install react-native-sound` | `npm install github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping` |
+
 ## 🎵 Overview
 
 React Native Sound now supports **true gapless looping** for professional audio applications. This feature provides seamless, zero-gap audio transitions perfect for meditation apps, ambient sound players, and music applications requiring uninterrupted audio experiences.
@@ -14,11 +28,33 @@ React Native Sound now supports **true gapless looping** for professional audio 
 
 ## 🚀 Installation
 
-### Prerequisites
+### Install Enhanced Gapless Version
+
+**⚠️ Important**: This enhanced gapless functionality is available in our forked version. Install from the specific branch:
 
 ```bash
-npm install react-native-sound --save
+npm install github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping --save
 ```
+
+Or using yarn:
+
+```bash
+yarn add github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping
+```
+
+### Alternative Installation Methods
+
+**Using HTTPS URL:**
+```bash
+npm install https://github.com/devsphere-apps/react-native-sound#feat/enhanced-gapless-looping --save
+```
+
+**Using Git URL:**
+```bash
+npm install git+https://github.com/devsphere-apps/react-native-sound.git#feat/enhanced-gapless-looping --save
+```
+
+### Platform Setup
 
 For React Native >= 0.60, auto-linking handles the setup. For older versions:
 
