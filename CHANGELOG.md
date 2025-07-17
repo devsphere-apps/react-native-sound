@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.12.1 - Codegen Compatibility Fix
+
+### 🔧 Bug Fixes
+
+**React Native Codegen Compatibility:**
+- Fixed union types in TypeScript definitions that were causing React Native codegen errors
+- Replaced `'instant' | 'crossfade'` union types with `string` types for TurboModule compatibility
+- Replaced `AVAudioSessionCategory` and `AVAudioSessionMode` union types with `string` types
+- Resolves "Union types are unsupported in structs" error during `npx expo prebuild`
+- Maintains full backward compatibility - all string values continue to work as expected
+
+**TypeScript Improvements:**
+- Simplified type definitions for better React Native New Architecture compatibility
+- Improved codegen reliability for TurboModule interface generation
+- Enhanced compatibility with Expo and React Native CLI build processes
+
+### 📚 Documentation
+
+- Updated TypeScript definitions with codegen-compatible types
+- Added troubleshooting section for build issues
+- Enhanced installation and setup documentation
+
 ## 0.12.0 - Enhanced Gapless Looping
 
 > **🎵 Major Feature Release**: This version introduces professional-grade gapless looping capabilities for meditation apps, ambient sound players, and music applications requiring seamless audio experiences.

@@ -13,6 +13,7 @@
 | **Memory-efficient looping** | ❌ | ✅ |
 | **Meditation app ready** | ❌ | ✅ |
 | Installation | `npm install react-native-sound` | `npm install github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping` |
+| Latest Version | 0.11.x | **0.12.1** (with codegen fix) |
 
 ## 🎵 Overview
 
@@ -664,6 +665,17 @@ Sound.setActive(true);
 ## 🐛 Troubleshooting
 
 ### Common Issues
+
+#### "Union types are unsupported in structs" Error
+
+**Problem**: React Native codegen fails during `npx expo prebuild` with this error.
+
+**Solution**: Update to version 0.12.1 or later:
+```bash
+npm install github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping --save
+```
+
+This error was caused by union types in TypeScript definitions that React Native's TurboModule codegen couldn't handle. Version 0.12.1+ uses codegen-compatible type definitions while maintaining full backward compatibility.
 
 #### "Gapless not working on device"
 

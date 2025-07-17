@@ -326,6 +326,54 @@ player.playAmbientMix(['rain', 'ocean'], [0.7, 0.3]);
 }
 ```
 
+## Troubleshooting
+
+### React Native Codegen Issues
+
+If you encounter the error "Union types are unsupported in structs" during `npx expo prebuild` or similar build processes:
+
+**Solution**: Update to version 0.12.1 or later, which resolves this React Native codegen compatibility issue.
+
+```bash
+npm install github:devsphere-apps/react-native-sound#feat/enhanced-gapless-looping --save
+```
+
+This error was caused by union types in TypeScript definitions that React Native's TurboModule codegen couldn't handle. Version 0.12.1+ uses codegen-compatible type definitions while maintaining full backward compatibility.
+
+### Gapless Looping Not Working
+
+1. **Check platform support**:
+```javascript
+sound.getGaplessInfo((info) => {
+  console.log('Gapless supported:', info.isGaplessSupported);
+});
+```
+
+2. **Verify audio format**: Use MP3, M4A, or WAV for best compatibility
+3. **Enable background playback** (iOS):
+```javascript
+Sound.setCategory('Playback');
+Sound.setActive(true);
+```
+
+### Common Build Issues
+
+If you encounter build errors:
+
+1. **Clear build caches**:
+```bash
+cd android && ./gradlew clean
+cd ios && rm -rf build/
+```
+
+2. **Re-install dependencies**:
+```bash
+npm install
+cd ios && pod install
+```
+
+3. **For Expo projects**, ensure you're using compatible React Native version
+
 ## Notes
 
 - To minimize playback delay, you may want to preload a sound file without calling `play()` (e.g. `var s = new Sound(...);`) during app initialization. This also helps avoid a race condition where `play()` may be called before loading of the sound is complete, which results in no sound but no error because loading is still being processed.

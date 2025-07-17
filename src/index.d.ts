@@ -3,25 +3,8 @@
 // Definitions by: Kyle Roach <https://github.com/iRoachie>
 // TypeScript Version: 2.3.2
 
-type AVAudioSessionCategory =
-  | "Ambient"
-  | "SoloAmbient"
-  | "Playback"
-  | "Record"
-  | "PlayAndRecord"
-  | "AudioProcessing"
-  | "MultiRoute"
-  | "Alarm";
-
-type AVAudioSessionMode =
-  | "Default"
-  | "VoiceChat"
-  | "VideoChat"
-  | "GameChat"
-  | "VideoRecording"
-  | "Measurement"
-  | "MoviePlayback"
-  | "SpokenAudio";
+// Audio session categories and modes are now handled as strings
+// to avoid React Native codegen issues with union types
 
 type FilenameType = string;
 
@@ -62,7 +45,7 @@ declare class Sound {
    * @param mixWithOthers Can be set to true to force mixing with other audio sessions.
    */
   static setCategory(
-    category: AVAudioSessionCategory,
+    category: string,
     mixWithOthers?: boolean
   ): void;
 
@@ -73,7 +56,7 @@ declare class Sound {
    * @param mode AVAudioSession mode
    * @param mixWithOthers Can be set to true to force mixing with other audio sessions.
    */
-  static setMode(mode: AVAudioSessionMode): void;
+  static setMode(mode: string): void;
 
   /**
    * Activates or deactivates the audio session with the ambient category, based on the provided boolean value.(iOS only)
@@ -220,7 +203,7 @@ declare class Sound {
    * @deprecated
    * @param value
    */
-  setCategory(value: AVAudioSessionCategory): void;
+  setCategory(value: string): void;
 
   /**
    * Turn speaker phone on (android only)
@@ -271,7 +254,7 @@ declare class Sound {
    * @param type - 'instant' for immediate transition, 'crossfade' for smooth crossfade (future enhancement)
    * @returns this instance for method chaining
    */
-  setGaplessTransitionType(type: 'instant' | 'crossfade'): this;
+  setGaplessTransitionType(type: string): this;
 
   /**
    * Get detailed information about gapless playback status.
@@ -283,7 +266,7 @@ declare class Sound {
     isGaplessEnabled: boolean;
     currentLoopCount: number;
     totalLoopsCompleted: number;
-    transitionType: 'instant' | 'crossfade';
+    transitionType: string;
     memoryUsage?: number; // in MB, if available
   }) => void): void;
 
