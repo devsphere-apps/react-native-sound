@@ -15,11 +15,14 @@ const LINKING_ERROR =
   "- You rebuilt the app after installing the package\n" +
   "- You are not using Expo Go\n";
 
+import NativeSoundAndroid from "./NativeSoundAndroid";
+import NativeSoundIOS from "./NativeSoundIOS";
+
 // @ts-expect-error
 const SoundModule = global.__turboModuleProxy
   ? IsAndroid
-    ? require("./NativeSoundAndroid").default
-    : require("./NativeSoundIOS").default
+    ? NativeSoundAndroid
+    : NativeSoundIOS
   : NativeModules.RNSound;
 
 const RNSound =
