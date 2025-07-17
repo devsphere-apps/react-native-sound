@@ -421,7 +421,7 @@ RCT_EXPORT_METHOD(setSpeakerphoneOn:(double)key value:(BOOL)value) {
 
 #pragma mark - Event Handling
 
-- (NSDictionary *)getDirectories {
+RCT_EXPORT_BLOCKING_SYNCHRONOUS_METHOD(getDirectories) {
     return [self constantsToExport];
 }
 
