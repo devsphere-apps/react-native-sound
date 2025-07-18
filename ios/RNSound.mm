@@ -273,8 +273,41 @@ RCT_EXPORT_METHOD(prepare:(NSString *)fileName key:(double)key options:(NSDictio
     
     if ([fileName hasPrefix:@"http"]) {
         fileNameUrl = [NSURL URLWithString:fileName];
-        NSData *data = [NSData dataWithContentsOfURL:fileNameUrl];
-        player = [[AVAudioPlayer alloc] initWithData:data error:&error];
+        
+        // Use asynchronous loading for HTTP URLs to prevent blocking
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            NSError *downloadError;
+            NSData *data = [NSData dataWithContentsOfURL:fileNameUrl options:0 error:&downloadError];
+            
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (data && !downloadError) {
+                    NSError *playerError;
+                    AVAudioPlayer *httpPlayer = [[AVAudioPlayer alloc] initWithData:data error:&playerError];
+                    
+                    if (httpPlayer && !playerError) {
+                        @synchronized(self) {
+                            httpPlayer.delegate = self;
+                            httpPlayer.enableRate = YES;
+                            [httpPlayer prepareToPlay];
+                            NSNumber *myNumber = @(key);
+                            [[self playerPool] setObject:httpPlayer forKey:myNumber];
+                            callback(@[
+                                [NSNull null],
+                                @{
+                                    @"duration": @(httpPlayer.duration),
+                                    @"numberOfChannels": @(httpPlayer.numberOfChannels)
+                                }
+                            ]);
+                        }
+                    } else {
+                        callback(@[RCTJSErrorFromNSError(playerError ?: [NSError errorWithDomain:@"RNSound" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed to create player from HTTP data"}])]);
+                    }
+                } else {
+                    callback(@[RCTJSErrorFromNSError(downloadError ?: [NSError errorWithDomain:@"RNSound" code:-1 userInfo:@{NSLocalizedDescriptionKey: @"Failed to download HTTP audio"}])]);
+                }
+            });
+        });
+        return; // Early return for async HTTP handling
     } else if ([fileName hasPrefix:@"ipod-library://"]) {
         fileNameUrl = [NSURL URLWithString:fileName];
         player = [[AVAudioPlayer alloc] initWithContentsOfURL:fileNameUrl
