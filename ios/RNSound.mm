@@ -498,41 +498,7 @@ RCT_EXPORT_METHOD(getCurrentTime:(double)key callback:(RCTResponseSenderBlock)ca
     }
 }
 
-#pragma mark - Playback Controls
 
-
-- (void)setCurrentTime:(double)key currentTime:(double)currentTime {
-    AVAudioPlayer *player = [self playerForKey:key];
-    if (player) {
-        player.currentTime = currentTime;
-    }
-}
-
-- (void)setPan:(double)key pan:(double)pan {
-    AVAudioPlayer *player = [self playerForKey:key];
-    if (player) {
-        player.pan = (float)pan;
-    }
-}
-
-- (void)setSpeakerPhone:(double)key isSpeaker:(BOOL)isSpeaker {
-    AVAudioSession *session = [AVAudioSession sharedInstance];
-    
-    if (isSpeaker) {
-        [session overrideOutputAudioPort:AVAudioSessionPortOverrideSpeaker error:nil];
-    } else {
-        [session overrideOutputAudioPort:AVAudioSessionPortOverrideNone error:nil];
-    }
-    
-    [session setActive:YES error:nil];
-}
-
-- (void)setSpeed:(double)key speed:(double)speed {
-    AVAudioPlayer *player = [self playerForKey:key];
-    if (player) {
-        player.rate = (float)speed;
-    }
-}
 
 #pragma mark - Enhanced Gapless Looping
 
