@@ -231,7 +231,7 @@ RCT_EXPORT_METHOD(setMode:(NSString *)modeName) {
     return modes[modeName];
 }
 
-RCT_EXPORT_METHOD(setCategory:(NSString *)categoryName mixWithOthers:(NSNumber *)mixWithOthers) {
+RCT_EXPORT_METHOD(setCategory:(NSString *)categoryName mixWithOthers:(nonnull NSNumber *)mixWithOthers) {
     AVAudioSession *session = [AVAudioSession sharedInstance];
     NSString *category = [self categoryForName:categoryName];
     
