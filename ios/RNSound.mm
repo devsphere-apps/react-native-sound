@@ -441,6 +441,51 @@ RCT_EXPORT_METHOD(getSystemVolume:(RCTResponseSenderBlock)callback) {
     callback(@[@(session.outputVolume)]);
 }
 
+RCT_EXPORT_METHOD(setSpeed:(double)key speed:(double)speed) {
+    AVAudioPlayer *player = [self playerForKey:key];
+    if (player) {
+        player.rate = (float)speed;
+    }
+}
+
+RCT_EXPORT_METHOD(setPan:(double)key pan:(double)pan) {
+    AVAudioPlayer *player = [self playerForKey:key];
+    if (player) {
+        player.pan = (float)pan;
+    }
+}
+
+RCT_EXPORT_METHOD(setCurrentTime:(double)key currentTime:(double)currentTime) {
+    AVAudioPlayer *player = [self playerForKey:key];
+    if (player) {
+        player.currentTime = currentTime;
+    }
+}
+
+RCT_EXPORT_METHOD(setSpeakerPhone:(double)key isSpeaker:(BOOL)isSpeaker) {
+    // On iOS, speaker phone is controlled through audio session category
+    // This is more of an Android-specific method, but we provide a stub for compatibility
+    if (isSpeaker) {
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                         withOptions:AVAudioSessionCategoryOptionDefaultToSpeaker
+                                               error:nil];
+    } else {
+        [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                         withOptions:0
+                                               error:nil];
+    }
+}
+
+RCT_EXPORT_METHOD(addListener:(NSString *)eventName) {
+    // Keep: Needed for RN built in Event Emitter Calls
+    // iOS implementation - events are handled by React Native's event system
+}
+
+RCT_EXPORT_METHOD(removeListeners:(double)count) {
+    // Keep: Needed for RN built in Event Emitter Calls
+    // iOS implementation - events are handled by React Native's event system
+}
+
 RCT_EXPORT_METHOD(getCurrentTime:(double)key callback:(RCTResponseSenderBlock)callback) {
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
@@ -613,8 +658,13 @@ RCT_EXPORT_METHOD(preloadForGapless:(double)key callback:(RCTResponseSenderBlock
 
 #pragma mark - Event Handling
 
-- (NSDictionary *)getDirectories {
-    return [self constantsToExport];
+RCT_EXPORT_SYNCHRONOUS_TYPED_METHOD(NSDictionary *, getDirectories) {
+    return @{
+        @"MainBundlePath": [[NSBundle mainBundle] bundlePath],
+        @"NSDocumentDirectory": [self getDirectory:NSDocumentDirectory],
+        @"NSLibraryDirectory": [self getDirectory:NSLibraryDirectory],
+        @"NSCachesDirectory": [self getDirectory:NSCachesDirectory]
+    };
 }
 
 - (void)setOnPlay:(BOOL)isPlaying forPlayerKey:(double)playerKey {
