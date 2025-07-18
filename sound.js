@@ -195,7 +195,8 @@ Sound.prototype.setVolume = function(value) {
     if (IsAndroid) {
       setAndroidVolumes(this)
     } else {
-      RNSound.setVolume(this._key, value);
+      // iOS also needs left and right volume parameters
+      RNSound.setVolume(this._key, value, value);
     }
   }
   return this;
