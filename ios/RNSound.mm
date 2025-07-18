@@ -266,7 +266,7 @@ RCT_EXPORT_METHOD(enableInSilenceMode:(BOOL)enabled) {
 
 #pragma mark - Audio Control Methods
 
-RCT_EXPORT_METHOD(prepare:(NSString *)fileName key:(double)key options:(JS::NativeSoundIOS::SoundOptionTypes &)options callback:(RCTResponseSenderBlock)callback ) {
+RCT_EXPORT_METHOD(prepare:(NSString *)fileName key:(double)key options:(NSDictionary *)options callback:(RCTResponseSenderBlock)callback ) {
     NSError *error;
     NSURL *fileNameUrl;
     AVAudioPlayer *player;
