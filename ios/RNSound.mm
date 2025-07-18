@@ -462,10 +462,11 @@ RCT_EXPORT_METHOD(setNumberOfLoops:(double)key loops:(double)loops) {
     }
 }
 
-RCT_EXPORT_METHOD(setVolume:(double)key left:(double)left right:(double)right) {
+RCT_EXPORT_METHOD(setVolume:(double)key volume:(double)left rightVolume:(double)right) {
     AVAudioPlayer *player = [self playerForKey:key];
     if (player) {
-        player.volume = (float)left;
+        player.volume = (left + right) / 2;  // Use average of left and right for overall volume
+        // Note: AVAudioPlayer doesn't support separate left/right channel volumes
     }
 }
 

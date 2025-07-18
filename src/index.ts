@@ -254,7 +254,8 @@ class Sound {
       if (IsAndroid) {
         this.setAndroidVolumes();
       } else {
-        RNSound.setVolume(this._key, value);
+        // iOS and Windows need left and right volume parameters
+        RNSound.setVolume(this._key, value, value);
       }
     }
     return this;
